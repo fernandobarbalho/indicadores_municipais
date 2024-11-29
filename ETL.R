@@ -81,3 +81,7 @@ indicadores_municipios<-
   left_join(notas_capag_trabalho) %>%
   left_join(idsc_2024_trabalho) %>%
   select(c(1,7,8,2:6,9:12))
+
+
+indicadores_municipios %>%
+  writexl::write_xlsx("indicadores_municipios.xlsx")
