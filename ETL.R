@@ -39,3 +39,24 @@ cidades_trabalho_regic %>%
   bind_rows(arranjos_populacionais_trabalho) %>%
   inner_join(municipios_ibge)
   
+
+
+notas_capag <- 
+  read_excel("TT20240515CAPAG-Municipios.xlsx", 
+                                         skip = 2) %>%
+  janitor::clean_names()
+
+trata_nd <- function(valor){
+  ifelse(is.na(valor),0,as.numeric(valor))
+}
+
+notas_capag_trabalho<-
+  notas_capag %>%
+  rename(id_municipio = codigo_municipio_completo) %>%
+  select(id_municipio, indicador_1, indicador_2, indicador_3) %>%
+  mutate(across(indicador_1:indicador_3,trata_nd))
+
+
+
+
+  
