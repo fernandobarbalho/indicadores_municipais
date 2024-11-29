@@ -12,7 +12,8 @@ cidades_trabalho_regic<-
          intensidade_gestao_empresarial = VAR23,
          centralidade_gestao_publica = VAR29,
          centralidade_atividades_financeiras = VAR84)%>%
-  mutate(codigo_do_ap = NA)
+  mutate(codigo_do_ap = NA,
+         centralidade_gestao_publica = as.numeric(centralidade_gestao_publica))
 
 municipios_ibge <- read_csv("municipios_ibge.csv")
 
@@ -54,9 +55,29 @@ notas_capag_trabalho<-
   notas_capag %>%
   rename(id_municipio = codigo_municipio_completo) %>%
   select(id_municipio, indicador_1, indicador_2, indicador_3) %>%
-  mutate(across(indicador_1:indicador_3,trata_nd))
+  mutate(across(indicador_1:indicador_3,trata_nd)) %>%
+  rename(
+    indicador_endividamento = indicador_1,
+    indicador_poupanca_corrente = indicador_2,
+    indicador_liquidez_relativa = indicador_3
+  )
+
+
+idsc_2024 <- 
+  read_excel("Base_de_Dados_IDSC-BR_2024.xlsx", 
+                                         sheet = "IDSC-BR 2024") %>%
+  janitor::clean_names()
+
+
+idsc_2024_trabalho<-
+  idsc_2024 %>%
+  select(1,4) %>%
+  rename(id_municipio= cod_mun)
 
 
 
-
-  
+indicadores_municipios<-
+  cidades_trabalho_regic %>%
+  left_join(notas_capag_trabalho) %>%
+  left_join(idsc_2024_trabalho) %>%
+  select(c(1,7,8,2:6,9:12))
