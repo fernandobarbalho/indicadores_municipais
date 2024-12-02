@@ -134,6 +134,20 @@ munic_2019_trabalho<-
             .by= CodMun ) %>%
   rename(id_municipio = CodMun)
 
+
+###Indicador de vulnerabilidade: desastres ambientais reconhecidos
+
+desastres_ambientais_reconhecidos <- readRDS("~/github/indicadores_municipais/desastres_ambientais_reconhecidos.rds")
+
+
+desastres_ambientais_trabalho<-
+  desastres_ambientais_reconhecidos %>%
+  summarise( quantidade_desastres_2023 = n(),
+            .by = id_municipio) %>%
+  filter(!is.na(id_municipio))
+
+
+
 #### consolidação
 
 indicadores_municipios<-
@@ -142,9 +156,20 @@ indicadores_municipios<-
   left_join(notas_capag_trabalho) %>%
   left_join(idsc_2024_trabalho) %>%
   left_join(participacao_gestao_publica_pib_trabalho) %>%
-  select(c(1,7,8,2:6,9:14)) %>%
+  left_join(desastres_ambientais_trabalho) %>%
+  select(c(1,7,8,2:6,9:15)) %>%
   mutate(id_municipio = as.character(id_municipio))
 
+
+fab<-
+cidades_trabalho_regic %>%
+  left_join(munic_2019_trabalho)  %>%
+  left_join(notas_capag_trabalho) %>%
+  left_join(idsc_2024_trabalho) %>%
+  left_join(participacao_gestao_publica_pib_trabalho) %>%
+  left_join(desastres_ambientais_trabalho) %>%
+  select(c(1,7,8,2:6,9:15)) %>%
+  mutate(id_municipio = as.character(id_municipio))
 
 
 indicadores_municipios %>%
