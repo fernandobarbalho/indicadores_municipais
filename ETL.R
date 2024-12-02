@@ -1,6 +1,9 @@
 library(tidyverse)
 library(readxl)
+library(sidrar)
 
+
+###Dados do regic
 cidades_regic <- read_excel("REGIC2018_Cidades_v2.xlsx")
 
 
@@ -41,6 +44,8 @@ cidades_trabalho_regic %>%
   inner_join(municipios_ibge)
   
 
+####DAdos CAPAG
+
 
 notas_capag <- 
   read_excel("TT20240515CAPAG-Municipios.xlsx", 
@@ -63,6 +68,8 @@ notas_capag_trabalho<-
   )
 
 
+####Dados idsc
+
 idsc_2024 <- 
   read_excel("Base_de_Dados_IDSC-BR_2024.xlsx", 
                                          sheet = "IDSC-BR 2024") %>%
@@ -75,13 +82,99 @@ idsc_2024_trabalho<-
   rename(id_municipio= cod_mun)
 
 
+####Daddos proporção do PIB dos municípios
+
+info_sidra(5938, wb = TRUE)
+
+participacao_gestao_publica_pib<-  
+  get_sidra(x = 5938,
+            #variable = c(11601,1607,11602), #12607 (número índice com ajustes sazonal), 11601 mês/mês anterior com ajustes sazonal, 11602 mês/mesmo mês do ano anterior 
+            variable = 528,
+            #period = c("202301-202406"),
+            #period = c("last" = 12),
+            geo = "City",
+            #geo.filter = "RS",
+            #classific = "C544",
+            #category =  list(c(129314 )), #, 72118,72119, 12046
+            header = FALSE,
+            format = 3)
+
+participacao_gestao_publica_pib_trabalho<-
+  participacao_gestao_publica_pib %>%
+  select(c(4:5)) %>%
+  rename(
+    proporcao_gestao_publica_pib = V,
+    id_municipio = D1C
+  ) %>%
+  mutate(id_municipio = as.numeric(id_municipio)) %>%
+  filter(proporcao_gestao_publica_pib >0 )
+
+
+
+###Dados MUNIC
+
+munic_2019 <- read_excel("Base_MUNIC_2019_20210817.xlsx", 
+                                       sheet = "Recursos para gestão")
+
+
+
+
+munic_2019_trabalho<-
+  munic_2019 %>%
+  select(CodMun, MREG01:MREG0143, MREG02, MREG03:MREG04, MREG05:MREG051, MREG061:MREG066) %>%
+  pivot_longer(cols=MREG01:MREG066,
+               names_to = "capacidade_gestao",
+               values_to = "existe_capacidade") %>%
+  mutate(existe_capacidade = case_when(
+    existe_capacidade == "Sim" ~ 1,
+    existe_capacidade == "Não" ~ 0,
+    .default = NA
+  )) %>%
+  summarise(total_capacidades_gestao = sum(existe_capacidade, na.rm = TRUE),
+            .by= CodMun ) %>%
+  rename(id_municipio = CodMun)
+
+#### consolidação
 
 indicadores_municipios<-
   cidades_trabalho_regic %>%
+  left_join(munic_2019_trabalho)  %>%
   left_join(notas_capag_trabalho) %>%
   left_join(idsc_2024_trabalho) %>%
-  select(c(1,7,8,2:6,9:12))
+  left_join(participacao_gestao_publica_pib_trabalho) %>%
+  select(c(1,7,8,2:6,9:14)) %>%
+  mutate(id_municipio = as.character(id_municipio))
+
 
 
 indicadores_municipios %>%
   writexl::write_xlsx("indicadores_municipios.xlsx")
+
+
+#### Anáises exploratórias iniciais
+
+boxplot(indicadores_municipios$proporcao_gestao_publica_pib)
+
+boxplot(indicadores_municipios$idsc_br_2024)
+
+boxplot(log(indicadores_municipios$intensidade_gestao_empresarial))
+
+indicadores_municipios %>%
+  ggplot(aes(x= proporcao_gestao_publica_pib, y= idsc_br_2024)) +
+  geom_point()
+
+cor.test(indicadores_municipios$proporcao_gestao_publica_pib, indicadores_municipios$idsc_br_2024)
+
+indicadores_municipios %>%
+  ggplot(aes(x= proporcao_gestao_publica_pib, y= intensidade_gestao_empresarial)) +
+  geom_point()+
+  scale_y_log10()
+
+cor.test(indicadores_municipios$proporcao_gestao_publica_pib, log(indicadores_municipios$intensidade_gestao_empresarial))
+
+
+indicadores_municipios %>%
+  ggplot(aes(x= proporcao_gestao_publica_pib, y= centralidade_gestao_publica)) +
+  geom_point()
+
+cor.test(indicadores_municipios$proporcao_gestao_publica_pib, log(indicadores_municipios$intensidade_gestao_empresarial))
