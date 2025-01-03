@@ -161,15 +161,6 @@ indicadores_municipios<-
   mutate(id_municipio = as.character(id_municipio))
 
 
-fab<-
-cidades_trabalho_regic %>%
-  left_join(munic_2019_trabalho)  %>%
-  left_join(notas_capag_trabalho) %>%
-  left_join(idsc_2024_trabalho) %>%
-  left_join(participacao_gestao_publica_pib_trabalho) %>%
-  left_join(desastres_ambientais_trabalho) %>%
-  select(c(1,7,8,2:6,9:15)) %>%
-  mutate(id_municipio = as.character(id_municipio))
 
 
 indicadores_municipios %>%
