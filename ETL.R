@@ -1,6 +1,7 @@
 library(tidyverse)
 library(readxl)
 library(sidrar)
+library(readxl)
 
 
 ###Dados do regic
@@ -148,6 +149,9 @@ desastres_ambientais_trabalho<-
 
 
 
+
+
+
 #### consolidação
 
 indicadores_municipios<-
@@ -165,6 +169,46 @@ indicadores_municipios<-
 
 indicadores_municipios %>%
   writexl::write_xlsx("indicadores_municipios.xlsx")
+
+
+######Consolidação posterior
+
+
+
+indicadores_municipios <- read_excel("indicadores_municipios.xlsx")
+
+
+# Dados RCL
+
+dados_rcl <- read_csv("dados_rcl.csv")
+
+dados_rcl <- janitor::clean_names(dados_rcl)
+
+dados_rcl_trabalho<-
+  dados_rcl %>%
+  summarise(rcl = sum(value),
+            .by = id_ente) %>%
+  mutate(id_ente = as.character(id_ente)) %>%
+  rename(id_municipio = id_ente)
+
+# Dados número de servidores municipios pela RAIS
+
+rais_servidores_municipios <- read_csv("rais_servidores_municipios.csv", 
+                                       col_types = cols(id_municipio = col_character()))
+
+
+
+#consolidação
+
+indicadores_municipios_nova_consolidacao<-
+indicadores_municipios %>%
+  left_join(dados_rcl_trabalho) %>%
+  left_join(rais_servidores_municipios)
+
+
+indicadores_municipios_nova_consolidacao %>%
+  writexl::write_xlsx("indicadores_municipios.xlsx")
+
 
 
 #### Anáises exploratórias iniciais
