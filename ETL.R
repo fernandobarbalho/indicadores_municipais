@@ -243,7 +243,8 @@ idsc_2024_indicadores_capacidade<-
     sdg17_3_p_rc_trb,
     
   ) %>%
-  rename(id_municipio = cod_mun)
+  rename(id_municipio = cod_mun) %>%
+  mutate(id_municipio = as.character(id_municipio))
 
 
 #DAdos do ranking do indicador da qualdiade da informação contábil e fiscal no SICONFI - Proxy da capacidade de produzir e tratar dados
@@ -256,21 +257,28 @@ municipios_bspn <- janitor::clean_names(municipios_bspn)
 
 municipios_bspn_trabalho<- 
   municipios_bspn %>%
+  filter(va_exercicio == 2023 ) %>%
   select(id_ente, 
          total) %>%
-  rename(id_municipio = id_ente)
+  rename(id_municipio = id_ente) %>%
+  mutate(id_municipio = as.character(id_municipio)) %>%
+  rename(indice_qualidade_informacao_contabil = total)
 
 
 #consolidação
 
-indicadores_municipios <- read_excel("indicadores_municipios.xlsx")
+#indicadores_municipios <- read_excel("indicadores_municipios.xlsx")
 
 
 indicadores_municipios<-
 indicadores_municipios %>%
-  left_join(populacao_municipios) 
+  left_join(municipios_bspn_trabalho) 
 
-indicadores_municipios_nova_consolidacao %>%
+
+
+
+
+indicadores_municipios %>%
   writexl::write_xlsx("indicadores_municipios.xlsx")
 
 
