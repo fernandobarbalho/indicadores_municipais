@@ -2,6 +2,7 @@ library(tidyverse)
 library(readxl)
 library(sidrar)
 library(readxl)
+library(sidrar)
 
 
 ###Dados do regic
@@ -82,6 +83,8 @@ idsc_2024_trabalho<-
   select(1,4) %>%
   rename(id_municipio= cod_mun)
 
+  
+
 
 ####Daddos proporção do PIB dos municípios
 
@@ -149,9 +152,6 @@ desastres_ambientais_trabalho<-
 
 
 
-
-
-
 #### consolidação
 
 indicadores_municipios<-
@@ -197,14 +197,78 @@ rais_servidores_municipios <- read_csv("rais_servidores_municipios.csv",
                                        col_types = cols(id_municipio = col_character()))
 
 
+#dados população
+info_sidra(4709, wb = TRUE)
+
+populacao_municipios<-  
+  get_sidra(x = 4709,
+            #variable = c(11601,1607,11602), #12607 (número índice com ajustes sazonal), 11601 mês/mês anterior com ajustes sazonal, 11602 mês/mesmo mês do ano anterior 
+            variable = 93,
+            #period = c("202301-202406"),
+            #period = c("last" = 12),
+            geo = "City",
+            #geo.filter = "RS",
+            #classific = "C544",
+            #category =  list(c(129314 )), #, 72118,72119, 12046
+            header = FALSE,
+            format = 3)
+
+
+populacao_municipios<-
+  populacao_municipios %>%
+  select(c(5,4)) %>%
+  rename(
+    populacao = V,
+    id_municipio = D1C  ) 
+
+
+
+#Dados de idsc associados a indicadores de capacidades
+#SDG3_27_DSP_SAU - Famílias inscritas no Cadastro Único para programas sociais (%)
+#SDG3_32_UBS - Unidades Básicas de Saúde (mil habitantes)
+#SDG4_18_D_SUP_EI - Professores com formação em nível superior - Educação Infantil - rede pública (%)
+#SDG4_19_D_SUP_EF - Professores com formação em nível superior - Ensino Fundamental - rede pública (%)
+#SDG9_2_EMP_INT - Participação dos empregos formais em atividades intensivas em conhecimento e tecnologia (%)
+#SDG17_3_P_RC_TRB - Total de receitas municipais arrecadadas (%)
+
+idsc_2024_indicadores_capacidade<-
+  idsc_2024 %>%
+  select(
+    cod_mun,
+    sdg3_27_dsp_sau,
+    sdg3_32_ubs,
+    sdg4_18_d_sup_ei,
+    sdg4_19_d_sup_ef,
+    sdg9_2_emp_int,
+    sdg17_3_p_rc_trb,
+    
+  ) %>%
+  rename(id_municipio = cod_mun)
+
+
+#DAdos do ranking do indicador da qualdiade da informação contábil e fiscal no SICONFI - Proxy da capacidade de produzir e tratar dados
+
+municipios_bspn <- read_delim("Ranking_municipios_bspn/municipios_bspn.csv", 
+                              delim = ";", escape_double = FALSE, col_types = cols(TOTAL = col_double()), 
+                              locale = locale(), trim_ws = TRUE)
+
+municipios_bspn <- janitor::clean_names(municipios_bspn)
+
+municipios_bspn_trabalho<- 
+  municipios_bspn %>%
+  select(id_ente, 
+         total) %>%
+  rename(id_municipio = id_ente)
+
 
 #consolidação
 
-indicadores_municipios_nova_consolidacao<-
-indicadores_municipios %>%
-  left_join(dados_rcl_trabalho) %>%
-  left_join(rais_servidores_municipios)
+indicadores_municipios <- read_excel("indicadores_municipios.xlsx")
 
+
+indicadores_municipios<-
+indicadores_municipios %>%
+  left_join(populacao_municipios) 
 
 indicadores_municipios_nova_consolidacao %>%
   writexl::write_xlsx("indicadores_municipios.xlsx")
