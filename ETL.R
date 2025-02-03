@@ -152,32 +152,6 @@ desastres_ambientais_trabalho<-
 
 
 
-#### consolidação
-
-indicadores_municipios<-
-  cidades_trabalho_regic %>%
-  left_join(munic_2019_trabalho)  %>%
-  left_join(notas_capag_trabalho) %>%
-  left_join(idsc_2024_trabalho) %>%
-  left_join(participacao_gestao_publica_pib_trabalho) %>%
-  left_join(desastres_ambientais_trabalho) %>%
-  select(c(1,7,8,2:6,9:15)) %>%
-  mutate(id_municipio = as.character(id_municipio))
-
-
-
-
-indicadores_municipios %>%
-  writexl::write_xlsx("indicadores_municipios.xlsx")
-
-
-######Consolidação posterior
-
-
-
-indicadores_municipios <- read_excel("indicadores_municipios.xlsx")
-
-
 # Dados RCL
 
 dados_rcl <- read_csv("dados_rcl.csv")
@@ -224,12 +198,15 @@ populacao_municipios<-
 
 
 #Dados de idsc associados a indicadores de capacidades
-#SDG3_27_DSP_SAU - Famílias inscritas no Cadastro Único para programas sociais (%)
 #SDG3_32_UBS - Unidades Básicas de Saúde (mil habitantes)
-#SDG4_18_D_SUP_EI - Professores com formação em nível superior - Educação Infantil - rede pública (%)
+#SDG4_18_D_SUP_EI - Professores com formação em nível superior - Educação Infantil - rede pública (%) #capacidade administrativa
 #SDG4_19_D_SUP_EF - Professores com formação em nível superior - Ensino Fundamental - rede pública (%)
 #SDG9_2_EMP_INT - Participação dos empregos formais em atividades intensivas em conhecimento e tecnologia (%)
 #SDG17_3_P_RC_TRB - Total de receitas municipais arrecadadas (%)
+
+#FPE(banco mundial) hiato fiscal: receita potencial do estado
+#contexto: localização importa (dependência tributária, )
+
 
 idsc_2024_indicadores_capacidade<-
   idsc_2024 %>%
@@ -248,6 +225,7 @@ idsc_2024_indicadores_capacidade<-
 
 
 #DAdos do ranking do indicador da qualdiade da informação contábil e fiscal no SICONFI - Proxy da capacidade de produzir e tratar dados
+# parnamirim- RN estruutra de TI avançada
 
 municipios_bspn <- read_delim("Ranking_municipios_bspn/municipios_bspn.csv", 
                               delim = ";", escape_double = FALSE, col_types = cols(TOTAL = col_double()), 
@@ -265,21 +243,30 @@ municipios_bspn_trabalho<-
   rename(indice_qualidade_informacao_contabil = total)
 
 
-#consolidação
-
-#indicadores_municipios <- read_excel("indicadores_municipios.xlsx")
-
+#### consolidação
 
 indicadores_municipios<-
-indicadores_municipios %>%
-  left_join(municipios_bspn_trabalho) 
-
+  cidades_trabalho_regic %>%
+  left_join(munic_2019_trabalho)  %>%
+  left_join(notas_capag_trabalho) %>%
+  left_join(idsc_2024_trabalho) %>%
+  left_join(participacao_gestao_publica_pib_trabalho) %>%
+  left_join(desastres_ambientais_trabalho) %>%
+  mutate(id_municipio = as.character(id_municipio)) %>%
+  left_join(dados_rcl_trabalho) %>%
+  left_join(rais_servidores_municipios) %>%
+  left_join(populacao_municipios) %>%
+  left_join(idsc_2024_indicadores_capacidade) %>%
+  left_join(municipios_bspn_trabalho) %>%
+  select(c(1,7,8,2:6,9:25))
 
 
 
 
 indicadores_municipios %>%
   writexl::write_xlsx("indicadores_municipios.xlsx")
+
+
 
 
 
