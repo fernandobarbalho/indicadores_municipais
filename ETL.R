@@ -5,6 +5,7 @@ library(readxl)
 library(sidrar)
 
 
+
 ###Dados do regic
 cidades_regic <- read_excel("REGIC2018_Cidades_v2.xlsx")
 
@@ -114,6 +115,32 @@ participacao_gestao_publica_pib_trabalho<-
   filter(proporcao_gestao_publica_pib >0 )
 
 
+####Daddos proporção do PIB dos municípios
+
+
+pib_municipio<-  
+  get_sidra(x = 5938,
+            #variable = c(11601,1607,11602), #12607 (número índice com ajustes sazonal), 11601 mês/mês anterior com ajustes sazonal, 11602 mês/mesmo mês do ano anterior 
+            variable = 37,
+            #period = c("202301-202406"),
+            #period = c("last" = 12),
+            geo = "City",
+            #geo.filter = "RS",
+            #classific = "C544",
+            #category =  list(c(129314 )), #, 72118,72119, 12046
+            header = FALSE,
+            format = 3)
+
+pib_municipio_trabalho<-
+  pib_municipio %>%
+  select(c(4:5)) %>%
+  rename(
+    pib_municipio = V,
+    id_municipio = D1C
+  ) %>%
+  mutate(id_municipio = as.numeric(id_municipio)) %>%
+  filter(pib_municipio >0 )
+
 
 ###Dados MUNIC
 
@@ -154,16 +181,33 @@ desastres_ambientais_trabalho<-
 
 # Dados RCL
 
-dados_rcl <- read_csv("dados_rcl.csv")
-
+dados_rcl <- read_delim("dados_rcl.csv", 
+                        delim = ";", escape_double = FALSE, locale = locale(decimal_mark = ",", 
+                                                                            grouping_mark = "."), trim_ws = TRUE)
 dados_rcl <- janitor::clean_names(dados_rcl)
 
-dados_rcl_trabalho<-
+rcl_Jacareacanga <- read_csv("rcl_Jacareacanga.csv")
+rcl_Jacareacanga <- janitor::clean_names(rcl_Jacareacanga)
+
+dados_rcl<- bind_rows(dados_rcl, rcl_Jacareacanga)
+
+dados_rcl_trabalho<-  
   dados_rcl %>%
-  summarise(rcl = sum(value),
-            .by = id_ente) %>%
+  summarise( rcl= sum(value),
+             .by = c(id_ente, an_exercicio)) %>%
+  arrange(id_ente)
+
+dados_rcl_trabalho<-
+  dados_rcl_trabalho %>%
+  summarise( rcl = mean(rcl),
+             .by = id_ente) %>%
   mutate(id_ente = as.character(id_ente)) %>%
   rename(id_municipio = id_ente)
+
+
+
+
+
 
 # Dados número de servidores municipios pela RAIS
 
@@ -251,6 +295,7 @@ indicadores_municipios<-
   left_join(notas_capag_trabalho) %>%
   left_join(idsc_2024_trabalho) %>%
   left_join(participacao_gestao_publica_pib_trabalho) %>%
+  left_join(pib_municipio_trabalho) %>%
   left_join(desastres_ambientais_trabalho) %>%
   mutate(id_municipio = as.character(id_municipio)) %>%
   left_join(dados_rcl_trabalho) %>%
@@ -259,6 +304,7 @@ indicadores_municipios<-
   left_join(idsc_2024_indicadores_capacidade) %>%
   left_join(municipios_bspn_trabalho) %>%
   select(c(1,7,8,2:6,9:25))
+
 
 
 
@@ -297,3 +343,5 @@ indicadores_municipios %>%
   geom_point()
 
 cor.test(indicadores_municipios$proporcao_gestao_publica_pib, log(indicadores_municipios$intensidade_gestao_empresarial))
+
+
