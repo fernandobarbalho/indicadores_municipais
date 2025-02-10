@@ -256,12 +256,12 @@ idsc_2024_indicadores_capacidade<-
   idsc_2024 %>%
   select(
     cod_mun,
-    sdg3_27_dsp_sau,
-    sdg3_32_ubs,
-    sdg4_18_d_sup_ei,
-    sdg4_19_d_sup_ef,
-    sdg9_2_emp_int,
-    sdg17_3_p_rc_trb,
+    normalizado_0_100_sdg3_27_dsp_sau,
+    normalizado_0_100_sdg3_32_ubs,
+    normalizado_0_100_sdg4_18_d_sup_ei,
+    normalizado_0_100_sdg4_19_d_sup_ef,
+    normalizado_0_100_sdg9_2_emp_int,
+    normalizado_0_100_sdg17_3_p_rc_trb,
     
   ) %>%
   rename(id_municipio = cod_mun) %>%
@@ -289,6 +289,7 @@ municipios_bspn_trabalho<-
 
 #### consolidação
 
+
 indicadores_municipios<-
   cidades_trabalho_regic %>%
   left_join(munic_2019_trabalho)  %>%
@@ -301,18 +302,46 @@ indicadores_municipios<-
   left_join(dados_rcl_trabalho) %>%
   left_join(rais_servidores_municipios) %>%
   left_join(populacao_municipios) %>%
-  left_join(idsc_2024_indicadores_capacidade) %>%
   left_join(municipios_bspn_trabalho) %>%
-  select(c(1,7,8,2:6,9:25))
+  left_join(idsc_2024_indicadores_capacidade) %>%
+  select(c(1,7,8,2:6,9:26))
 
 
 
+indicadores_normalizaveis<-
+  indicadores_municipios %>%
+  mutate(rcl_per_capita = rcl/populacao,
+         servidores_per_capita = numero_servidores/populacao,
+         quantidade_desastres_2023 =ifelse(is.na(quantidade_desastres_2023),0,quantidade_desastres_2023)) %>%
+  select(proporcao_gestao_publica_pib, rcl_per_capita, servidores_per_capita, quantidade_desastres_2023, indice_qualidade_informacao_contabil ) %>%
+  readr::write_csv("indicadores_para_normalizacao.csv")
 
 
-indicadores_municipios %>%
+# Define a function for min-max normalization to 0-100 range
+normalize <- function(x) {
+  return((x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)) * 100)
+}
+
+# Apply the normalization function to each column
+normalized_data <- indicadores_normalizaveis %>%
+  mutate(across(everything(), normalize))
+
+
+# Rename all columns by adding the prefix "normalizado_0_100_"
+colnames(normalized_data) <- paste0("normalizado_0_100_", colnames(normalized_data))
+
+indicadores_municipios_export<-
+bind_cols(indicadores_municipios, normalized_data)
+
+
+indicadores_municipios_export %>%
   writexl::write_xlsx("indicadores_municipios.xlsx")
 
 
+
+###Geração de arquivo com dados para normalização
+
+  
 
 
 

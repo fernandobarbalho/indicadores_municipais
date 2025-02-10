@@ -148,12 +148,18 @@ dados_grafico %>%
     strip.text = element_text(color = "black"),
     plot.title = element_text(
       hjust = 0.5,
-      size = 16,,
+      size = 16,
       color = "darkblue",
+      face = "bold"),
+    plot.subtitle = element_text(
+      hjust = 0.5,
+      size = 12,
+      color = "blue",
       face = "bold")
   )+
   labs(
     title= "Posição do Ceará em indicadores selecionados",
+    subtitle = "Distribuição dos valores alcançados pelas cidades",
     x="",
     y="",
     caption = "Fonte: Índice de desenvolvimento sustentável das cidades (IDSC-BR). Elaboração: Fernando Barbalho"
