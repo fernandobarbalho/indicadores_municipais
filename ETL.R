@@ -1,8 +1,6 @@
 library(tidyverse)
 library(readxl)
 library(sidrar)
-library(readxl)
-library(sidrar)
 
 
 
@@ -313,9 +311,7 @@ indicadores_normalizaveis<-
   mutate(rcl_per_capita = rcl/populacao,
          servidores_per_capita = numero_servidores/populacao,
          quantidade_desastres_2023 =ifelse(is.na(quantidade_desastres_2023),0,quantidade_desastres_2023)) %>%
-  select(proporcao_gestao_publica_pib, rcl_per_capita, servidores_per_capita, quantidade_desastres_2023, indice_qualidade_informacao_contabil ) %>%
-  readr::write_csv("indicadores_para_normalizacao.csv")
-
+  select(proporcao_gestao_publica_pib, rcl_per_capita, servidores_per_capita, quantidade_desastres_2023, indice_qualidade_informacao_contabil ) 
 
 # Define a function for min-max normalization to 0-100 range
 normalize <- function(x) {
@@ -336,6 +332,8 @@ bind_cols(indicadores_municipios, normalized_data)
 
 indicadores_municipios_export %>%
   writexl::write_xlsx("indicadores_municipios.xlsx")
+
+
 
 
 

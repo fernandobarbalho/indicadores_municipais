@@ -169,6 +169,9 @@ dados_grafico %>%
 
 ggsave(filename = "idsc_ceara.png", plot= grafico, width = 13.3, height = 7.5, dpi=300)
 
+
+###Análise de correlação
+
 dados_financeiros<-
   indicadores_municipios %>%
   mutate(numero_servidores_per_capita = numero_servidores/populacao,
