@@ -171,7 +171,7 @@ data <- na.omit(dados_modelo_pca)
 
 ### Todas variáveis
 # Separate features and target variable
-features <- data %>% select(-c(nome,sigla_uf))
+features <- data %>% select(-c(nome,sigla_uf, normalizado_0_100_sdg3_27_dsp_sau))
 #target <- data$sigla_uf
 
 
@@ -229,7 +229,7 @@ head(data_with_pca)
 
 ### Variáveis de maior contribuição
 # Separate features and target variable
-features <- data %>% select(c(normalizado_0_100_sdg3_27_dsp_sau, normalizado_0_100_rcl_per_capita, normalizado_0_100_proporcao_gestao_publica_pib,normalizado_0_100_sdg17_3_p_rc_trb,normalizado_0_100_sdg3_32_ubs))
+features <- data %>% select(c(normalizado_0_100_proporcao_gestao_publica_pib, normalizado_0_100_sdg17_3_p_rc_trb, normalizado_0_100_sdg3_32_ubs,normalizado_0_100_sdg4_19_d_sup_ef))
 #target <- data$sigla_uf
 
 
@@ -256,7 +256,6 @@ contribuicoes_variaveis<-
 
 df_contribuicoes<-contribuicoes_variaveis[["data"]]
 
-municipios<-
   fviz_pca_ind(pca_result, 
                geom.ind = c("point"),
                col.ind = "blue", 
@@ -277,25 +276,17 @@ fviz_pca_biplot(pca_result,
 pca_components <- pca_result$ind$coord
 
 # Add the principal components to the original dataset
-data_with_pca <- cbind(data%>%select(c(nome,sigla_uf,c(normalizado_0_100_sdg3_27_dsp_sau, normalizado_0_100_rcl_per_capita, normalizado_0_100_proporcao_gestao_publica_pib,normalizado_0_100_sdg17_3_p_rc_trb,normalizado_0_100_sdg3_32_ubs))), pca_components)
+data_with_pca <- cbind(data%>%select(c(nome,sigla_uf,c(normalizado_0_100_sdg4_19_d_sup_ef, normalizado_0_100_sdg17_3_p_rc_trb, normalizado_0_100_sdg3_32_ubs, normalizado_0_100_proporcao_gestao_publica_pib))), pca_components)
 
 # View the dataset with PCA components
 head(data_with_pca)
 
 
-data_with_pca %>%
-  ggplot(aes(x= Dim.1, y= normalizado_0_100_sdg3_27_dsp_sau)) +
-  geom_point()
- 
-
-data_with_pca %>%
-  ggplot(aes(x= Dim.1, y= normalizado_0_100_rcl_per_capita)) +
-  geom_point()
 
 
 graf1<-
   data_with_pca %>%
-  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_sdg3_27_dsp_sau, size=normalizado_0_100_sdg3_27_dsp_sau)) +
+  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_sdg4_19_d_sup_ef, size=normalizado_0_100_sdg4_19_d_sup_ef)) +
   geom_point(pch=21, color= "black") +
   colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
   theme(
@@ -306,19 +297,6 @@ graf1<-
 
 
 graf2<-
-data_with_pca %>%
-  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_rcl_per_capita, size=normalizado_0_100_rcl_per_capita)) +
-  geom_point(pch=21, color= "black") +
-  colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
-  theme(
-    legend.position = "bottom",
-    panel.grid = element_blank(),
-    panel.background = element_rect(fill = "black")
-  )
-
-
-
-graf3<-
 data_with_pca %>%
   ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_sdg17_3_p_rc_trb, size=normalizado_0_100_sdg17_3_p_rc_trb)) +
   geom_point(pch=21, color= "black") +
@@ -331,9 +309,9 @@ data_with_pca %>%
 
 
 
-graf4<-
+graf3<-
 data_with_pca %>%
-  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_sdg3_32_ubs, size= normalizado_0_100_sdg3_32_ubs)) +
+  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_sdg3_32_ubs, size=normalizado_0_100_sdg3_32_ubs)) +
   geom_point(pch=21, color= "black") +
   colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
   theme(
@@ -342,7 +320,9 @@ data_with_pca %>%
     panel.background = element_rect(fill = "black")
   )
 
-graf5<-
+
+
+graf4<-
 data_with_pca %>%
   ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_proporcao_gestao_publica_pib, size= normalizado_0_100_proporcao_gestao_publica_pib)) +
   geom_point(pch=21, color= "black") +
@@ -357,37 +337,29 @@ data_with_pca %>%
 
 library(patchwork)
 
-(graf1 + graf2 + graf3)/(graf4+ graf5 + graf5 )
+(graf1 + graf2)/(graf3+graf4)
 
 box1<-
   data_with_pca %>%
-  mutate(variavel = "Saúde") %>%
+  mutate(variavel = "Ensino") %>%
   ggplot() +
-  geom_boxplot(aes(x=variavel, y=normalizado_0_100_sdg3_27_dsp_sau))
+  geom_boxplot(aes(x=variavel, y=normalizado_0_100_sdg4_19_d_sup_ef))
 
 
 box2<-
-  data_with_pca %>%
-  mutate(variavel = "rcl") %>%
-  ggplot() +
-  geom_boxplot(aes(x=variavel, y=normalizado_0_100_rcl_per_capita))
-
-box3<-
   data_with_pca %>%
   mutate(variavel = "receita") %>%
   ggplot() +
   geom_boxplot(aes(x=variavel, y=normalizado_0_100_sdg17_3_p_rc_trb))
 
-
-box4<-
+box3<-
   data_with_pca %>%
   mutate(variavel = "ubs") %>%
   ggplot() +
   geom_boxplot(aes(x=variavel, y=normalizado_0_100_sdg3_32_ubs))
 
 
-
-box5<-
+box4<-
   data_with_pca %>%
   mutate(variavel = "gestão pública") %>%
   ggplot() +
@@ -397,7 +369,10 @@ box5<-
 
 
 
-(box1 + box2 + box3)/(box4+ box5 + box5 )
+
+
+
+(box1 + box2) / (box3 +box4)
 
 modelo_lm_rcl_per_capita<- lm(normalizado_0_100_rcl_per_capita~sigla_uf, data = indicadores_municipios_export )
 
@@ -409,7 +384,29 @@ indicadores_municipios_export %>%
   geom_boxplot(fill=NA, outlier.shape = NA)
 
 
+modelo_dim1<- lm(Dim.1~sigla_uf, data = data_with_pca)
 
+summary(modelo_dim1)
+
+
+data_with_pca %>%
+  ggplot(aes(x=sigla_uf,y= Dim.1*-1)) +
+  geom_jitter(color= "gray")+
+  geom_boxplot(fill=NA, outlier.shape = NA)
+
+
+modelo_dim2<- lm(Dim.2~sigla_uf, data = data_with_pca)
+
+summary(modelo_dim2)
+
+
+data_with_pca %>%
+  ggplot(aes(x=sigla_uf,y= Dim.2)) +
+  geom_jitter(color= "gray")+
+  geom_boxplot(fill=NA, outlier.shape = NA)
+
+
+cor.test(data_with_pca$normalizado_0_100_sdg3_27_dsp_sau,data_with_pca$normalizado_0_100_rcl_per_capita)
 
 ##############
 
