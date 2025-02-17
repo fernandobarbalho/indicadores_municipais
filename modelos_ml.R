@@ -82,6 +82,8 @@ indicadores_municipios_export %>%
   geom_boxplot(fill=NA, outlier.shape = NA)
 
 
+
+
 modelo_lm_servidores_per_capita<- lm(normalizado_0_100_servidores_per_capita~sigla_uf, data = indicadores_municipios_export )
 
 summary(modelo_lm_servidores_per_capita)
@@ -160,10 +162,14 @@ indicadores_municipios_export %>%
 
 ##### análise PCA
 
+
+
 # Remove any rows with missing values (if necessary)
 data <- na.omit(dados_modelo_pca)
 
 
+
+### Todas variáveis
 # Separate features and target variable
 features <- data %>% select(-c(nome,sigla_uf))
 #target <- data$sigla_uf
@@ -183,6 +189,25 @@ fviz_eig(pca_result, addlabels = TRUE, ylim = c(0, 50))
 fviz_contrib(pca_result, choice = "var", axes = 1, top = 10)  # Contributions to PC1
 fviz_contrib(pca_result, choice = "var", axes = 2, top = 10)  # Contributions to PC2
 
+# Visualizar a contribuição de cada produto para os componentes principais
+contribuicoes_variaveis<-
+  fviz_pca_var(pca_result, 
+               col.var = "contrib", 
+               gradient.cols = c("blue", "yellow", "red"),
+               repel = TRUE)
+
+df_contribuicoes<-contribuicoes_variaveis[["data"]]
+
+
+municipios<-
+  fviz_pca_ind(pca_result, 
+               geom.ind = c("point"),
+               col.ind = "blue", 
+               addEllipses = TRUE,
+               ellipse.level = 0.75)
+
+
+
 # Biplot of individuals and variables
 fviz_pca_biplot(pca_result, 
                 col.ind = data$sigla_uf,  # Color by state
@@ -199,3 +224,194 @@ data_with_pca <- cbind(data, pca_components)
 
 # View the dataset with PCA components
 head(data_with_pca)
+
+
+
+### Variáveis de maior contribuição
+# Separate features and target variable
+features <- data %>% select(c(normalizado_0_100_sdg3_27_dsp_sau, normalizado_0_100_rcl_per_capita, normalizado_0_100_proporcao_gestao_publica_pib,normalizado_0_100_sdg17_3_p_rc_trb,normalizado_0_100_sdg3_32_ubs))
+#target <- data$sigla_uf
+
+
+
+# Perform PCA
+pca_result <- PCA(features, scale.unit = TRUE, ncp = 5, graph = FALSE)
+
+# Summary of PCA results
+summary(pca_result)
+
+# Visualize the eigenvalues (scree plot)
+fviz_eig(pca_result, addlabels = TRUE, ylim = c(0, 50))
+
+# Visualize the contributions of variables to the principal components
+fviz_contrib(pca_result, choice = "var", axes = 1, top = 10)  # Contributions to PC1
+fviz_contrib(pca_result, choice = "var", axes = 2, top = 10)  # Contributions to PC2
+
+# Visualizar a contribuição de cada produto para os componentes principais
+contribuicoes_variaveis<-
+  fviz_pca_var(pca_result, 
+               col.var = "contrib", 
+               gradient.cols = c("blue", "yellow", "red"),
+               repel = TRUE)
+
+df_contribuicoes<-contribuicoes_variaveis[["data"]]
+
+municipios<-
+  fviz_pca_ind(pca_result, 
+               geom.ind = c("point"),
+               col.ind = "blue", 
+               addEllipses = TRUE,
+               ellipse.level = 0.75)
+
+
+
+# Biplot of individuals and variables
+fviz_pca_biplot(pca_result, 
+                col.ind = data$sigla_uf,  # Color by state
+                palette = "jco",          # Color palette
+                addEllipses = TRUE,       # Add ellipses around groups
+                repel = TRUE              # Avoid label overlap
+)
+
+# Extract the principal components
+pca_components <- pca_result$ind$coord
+
+# Add the principal components to the original dataset
+data_with_pca <- cbind(data%>%select(c(nome,sigla_uf,c(normalizado_0_100_sdg3_27_dsp_sau, normalizado_0_100_rcl_per_capita, normalizado_0_100_proporcao_gestao_publica_pib,normalizado_0_100_sdg17_3_p_rc_trb,normalizado_0_100_sdg3_32_ubs))), pca_components)
+
+# View the dataset with PCA components
+head(data_with_pca)
+
+
+data_with_pca %>%
+  ggplot(aes(x= Dim.1, y= normalizado_0_100_sdg3_27_dsp_sau)) +
+  geom_point()
+ 
+
+data_with_pca %>%
+  ggplot(aes(x= Dim.1, y= normalizado_0_100_rcl_per_capita)) +
+  geom_point()
+
+
+graf1<-
+  data_with_pca %>%
+  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_sdg3_27_dsp_sau, size=normalizado_0_100_sdg3_27_dsp_sau)) +
+  geom_point(pch=21, color= "black") +
+  colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
+  theme(
+    legend.position = "bottom",
+    panel.grid = element_blank(),
+    panel.background = element_rect(fill = "black")
+  )
+
+
+graf2<-
+data_with_pca %>%
+  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_rcl_per_capita, size=normalizado_0_100_rcl_per_capita)) +
+  geom_point(pch=21, color= "black") +
+  colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
+  theme(
+    legend.position = "bottom",
+    panel.grid = element_blank(),
+    panel.background = element_rect(fill = "black")
+  )
+
+
+
+graf3<-
+data_with_pca %>%
+  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_sdg17_3_p_rc_trb, size=normalizado_0_100_sdg17_3_p_rc_trb)) +
+  geom_point(pch=21, color= "black") +
+  colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
+  theme(
+    legend.position = "bottom",
+    panel.grid = element_blank(),
+    panel.background = element_rect(fill = "black")
+  )
+
+
+
+graf4<-
+data_with_pca %>%
+  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_sdg3_32_ubs, size= normalizado_0_100_sdg3_32_ubs)) +
+  geom_point(pch=21, color= "black") +
+  colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
+  theme(
+    legend.position = "bottom",
+    panel.grid = element_blank(),
+    panel.background = element_rect(fill = "black")
+  )
+
+graf5<-
+data_with_pca %>%
+  ggplot(aes(x= Dim.1, y= Dim.2, fill= normalizado_0_100_proporcao_gestao_publica_pib, size= normalizado_0_100_proporcao_gestao_publica_pib)) +
+  geom_point(pch=21, color= "black") +
+  colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
+  theme(
+    legend.position = "bottom",
+    panel.grid = element_blank(),
+    panel.background = element_rect(fill = "black")
+  )
+
+
+
+library(patchwork)
+
+(graf1 + graf2 + graf3)/(graf4+ graf5 + graf5 )
+
+box1<-
+  data_with_pca %>%
+  mutate(variavel = "Saúde") %>%
+  ggplot() +
+  geom_boxplot(aes(x=variavel, y=normalizado_0_100_sdg3_27_dsp_sau))
+
+
+box2<-
+  data_with_pca %>%
+  mutate(variavel = "rcl") %>%
+  ggplot() +
+  geom_boxplot(aes(x=variavel, y=normalizado_0_100_rcl_per_capita))
+
+box3<-
+  data_with_pca %>%
+  mutate(variavel = "receita") %>%
+  ggplot() +
+  geom_boxplot(aes(x=variavel, y=normalizado_0_100_sdg17_3_p_rc_trb))
+
+
+box4<-
+  data_with_pca %>%
+  mutate(variavel = "ubs") %>%
+  ggplot() +
+  geom_boxplot(aes(x=variavel, y=normalizado_0_100_sdg3_32_ubs))
+
+
+
+box5<-
+  data_with_pca %>%
+  mutate(variavel = "gestão pública") %>%
+  ggplot() +
+  geom_boxplot(aes(x=variavel, y=normalizado_0_100_proporcao_gestao_publica_pib))
+
+
+
+
+
+(box1 + box2 + box3)/(box4+ box5 + box5 )
+
+modelo_lm_rcl_per_capita<- lm(normalizado_0_100_rcl_per_capita~sigla_uf, data = indicadores_municipios_export )
+
+summary(modelo_lm_rcl_per_capita)
+
+indicadores_municipios_export %>%
+  ggplot(aes(x=sigla_uf,y= normalizado_0_100_rcl_per_capita)) +
+  geom_jitter(color= "gray")+
+  geom_boxplot(fill=NA, outlier.shape = NA)
+
+
+
+
+##############
+
+
+
