@@ -374,15 +374,6 @@ box4<-
 
 (box1 + box2) / (box3 +box4)
 
-modelo_lm_rcl_per_capita<- lm(normalizado_0_100_rcl_per_capita~sigla_uf, data = indicadores_municipios_export )
-
-summary(modelo_lm_rcl_per_capita)
-
-indicadores_municipios_export %>%
-  ggplot(aes(x=sigla_uf,y= normalizado_0_100_rcl_per_capita)) +
-  geom_jitter(color= "gray")+
-  geom_boxplot(fill=NA, outlier.shape = NA)
-
 
 modelo_dim1<- lm(Dim.1~sigla_uf, data = data_with_pca)
 
