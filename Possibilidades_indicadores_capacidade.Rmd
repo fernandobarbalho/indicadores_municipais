@@ -1,0 +1,169 @@
+---
+title: "Possibilidades dos indicadores de capacidade"
+author: "Fernando Almeida Barbalho"
+date: '2025-02-20'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(readxl)
+library(geobr)
+library(colorspace)
+
+brasil<- geobr::read_country()
+
+estados<- geobr::read_state()
+
+municipios<- geobr::read_municipality(simplified = FALSE)
+
+sedes<- geobr::read_municipal_seat()
+
+indicadores_municipios_trabalho <- readRDS("~/Github/indicadores_municipais/indicadores_municipios_trabalho.rds")
+
+variaveis <- read_excel("variaveis.xlsx")
+
+
+
+indicadores_municipios_pivot<-
+  indicadores_municipios_trabalho %>%
+  mutate(normalizado_0_100_proporcao_gestao_publica_pib= 100- normalizado_0_100_proporcao_gestao_publica_pib,
+         normalizado_0_100_sdg3_32_ubs = 100 - normalizado_0_100_sdg3_32_ubs,
+         normalizado_0_100_quantidade_desastres_2023 = 100- normalizado_0_100_quantidade_desastres_2023) %>%
+  select(id_municipio,nome, sigla_uf, idsc_br_2024,normalizado_0_100_sdg3_27_dsp_sau:normalizado_0_100_indice_qualidade_informacao_contabil) %>%
+  pivot_longer(cols = c(idsc_br_2024, normalizado_0_100_sdg3_27_dsp_sau:normalizado_0_100_indice_qualidade_informacao_contabil), names_to= "variavel", values_to = "valor") %>%
+  inner_join(variaveis)
+
+media_indicadores_municipios<-
+  indicadores_municipios_pivot %>%
+  filter(tipo!= "dependente") %>%
+  summarise(media_tipo = mean(valor),
+            .by = c(id_municipio, nome, sigla_uf, tipo))
+
+indicador_capacidade_geral<-
+  media_indicadores_municipios %>%
+  summarise(indicador_capacidade_geral = mean(media_tipo),
+            .by = c(id_municipio, nome, sigla_uf)) %>%
+  arrange(desc(indicador_capacidade_geral))
+
+indicador_capacidade_total<-
+  indicador_capacidade_geral %>%
+  inner_join(
+    media_indicadores_municipios %>%
+      pivot_wider(names_from = tipo,
+                  values_from = media_tipo)
+  ) %>%
+  inner_join(
+    indicadores_municipios_pivot %>%
+      select(id_municipio, variavel, valor) %>%
+      pivot_wider(names_from = variavel,
+                  values_from = valor)
+  )
+  
+  
+```
+
+## Ranking Indicador de capacidade geral
+
+```{r}
+indicador_capacidade_total %>%
+  slice_max(order_by = indicador_capacidade_geral, n=20) %>%
+  mutate(municipio = paste(nome, sigla_uf, sep = "-")) %>%
+  mutate(municipio = reorder(municipio,indicador_capacidade_geral)) %>%
+  ggplot(aes(x=indicador_capacidade_geral, y=municipio)) +
+  geom_text(aes(x=indicador_capacidade_geral +3, label = round(indicador_capacidade_geral,1)),
+            color = "white") +
+  geom_col(fill= "white") +
+  theme_light() +
+  theme(
+    panel.background = element_rect(fill="black"),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank(),
+    title = element_text(size=11, color = "darkblue")
+  ) +
+  labs(
+    title = "Vinte municípios com maiores indicadores de capacidade",
+    x="",
+    y=""
+  )
+
+```
+
+
+
+```{r}
+indicador_capacidade_total %>%
+  slice_min(order_by = indicador_capacidade_geral, n=20) %>%
+  mutate(municipio = paste(nome, sigla_uf, sep = "-")) %>%
+  mutate(municipio = reorder(municipio,indicador_capacidade_geral)) %>%
+  ggplot(aes(x=indicador_capacidade_geral, y=municipio)) +
+  geom_text(aes(x=indicador_capacidade_geral +1, label = round(indicador_capacidade_geral,1)),
+            color = "white") +
+  geom_col(fill= "white") +
+  theme_light() +
+  theme(
+    panel.background = element_rect(fill="black"),
+    panel.grid = element_blank(),
+    axis.text.x = element_blank(),
+    title = element_text(size=11, color = "darkblue")
+  ) +
+  labs(
+    title = "Vinte municípios com menores indicadores de capacidade",
+    x="",
+    y=""
+  )
+
+```
+
+
+## Distribuição da capacidade por estado
+
+```{r}
+
+indicador_capacidade_total %>%
+  ggplot(aes(x= sigla_uf, y= indicador_capacidade_geral)) +
+  geom_jitter(color= "black", fill="gray", pch=21)+
+  geom_boxplot(fill=NA, outlier.shape = NA, color = "white") +
+  geom_hline(yintercept = 50, color = "orange", size=0.8) +
+  theme_light() +
+  theme(
+    panel.background = element_rect(fill = "black"),
+    panel.grid = element_blank()
+  ) +
+  labs(
+    x="",
+    y=""
+  )
+
+
+```
+
+
+
+## Mapa Indicador de capacidade geral
+
+
+```{r fig.dpi= 300, fig.height=7.5, fig.width=13.3}
+
+sedes %>%
+  inner_join(
+    indicador_capacidade_total %>%
+    mutate(code_muni = as.numeric(id_municipio))
+  ) %>%
+  ggplot() +
+  geom_sf(data= estados, fill=NA, color = "white")+
+  geom_sf(aes(fill= indicador_capacidade_geral), pch=21, color = "black") +
+  scale_fill_continuous_divergingx (palette = "RdBu", mid=50) +
+  theme_void() +
+  theme(
+    panel.background = element_rect(fill="black")
+  )+
+  labs(
+    fill=""
+  )
+
+
+
+```

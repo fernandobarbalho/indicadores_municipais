@@ -290,9 +290,12 @@ graf1<-
   geom_point(pch=21, color= "black") +
   colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
   theme(
-    legend.position = "bottom",
+    legend.position = "none",
     panel.grid = element_blank(),
-    panel.background = element_rect(fill = "black")
+    panel.background = element_rect(fill = "black"),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
   )
 
 
@@ -302,9 +305,12 @@ data_with_pca %>%
   geom_point(pch=21, color= "black") +
   colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
   theme(
-    legend.position = "bottom",
+    legend.position = "none",
     panel.grid = element_blank(),
-    panel.background = element_rect(fill = "black")
+    panel.background = element_rect(fill = "black"),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
   )
 
 
@@ -315,9 +321,12 @@ data_with_pca %>%
   geom_point(pch=21, color= "black") +
   colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
   theme(
-    legend.position = "bottom",
+    legend.position = "none",
     panel.grid = element_blank(),
-    panel.background = element_rect(fill = "black")
+    panel.background = element_rect(fill = "black"),
+    axis.title = element_blank(),
+    #axis.text = element_blank(),
+    #axis.ticks = element_blank()
   )
 
 
@@ -328,16 +337,26 @@ data_with_pca %>%
   geom_point(pch=21, color= "black") +
   colorspace::scale_fill_continuous_sequential(palette = "Heat 2")+
   theme(
-    legend.position = "bottom",
+    legend.position = "none",
     panel.grid = element_blank(),
-    panel.background = element_rect(fill = "black")
+    panel.background = element_rect(fill = "black"),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank()
+  )+
+  labs(
+    caption = "by Fernando Barbalho"
   )
 
 
 
 library(patchwork)
 
+grafico<-
 (graf1 + graf2)/(graf3+graf4)
+
+
+ggsave("accidental_art.png", plot= grafico, width = 13.3, height = 7.5, dpi=300)
 
 box1<-
   data_with_pca %>%
